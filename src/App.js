@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import MoviesList from './components/MoviesList';
 import './App.css';
+import AddMovie from './components/AddMovie';
 
 function App() {
 
@@ -14,21 +15,25 @@ const fetchMoviesHandler = useCallback(async () => {
   setIsLoading(true);
   setError(null)
   try {
-  const response = await fetch('https://swapi.dev/api/films/')
-  const data = await response.json();
+  const response = await fetch('https://react-http-441e2-default-rtdb.firebaseio.com/movies.json')
 
     if (!response.ok) {
       throw new Error('Custom error message')
     }
-    const transformedMovies = data.results.map(item => {
-      return {
-        id: item.episode_id,
-        title: item.title,
-        openingText: item.opening_crawl,
-        releaseDate: item.release_date
-      }
-    })
-    setMovies(transformedMovies);
+    const data = await response.json();
+
+    const loadedMovies = []
+
+    for (const key in data){
+      loadedMovies.push({
+        id: key,
+        title: data[key].title,
+        openingText: data[key].openingText,
+        releaseDatw: data[key].releaseDate,
+      })
+    }
+
+    setMovies(loadedMovies);
   } catch(error) {
     setError(error.message);
   }
@@ -39,6 +44,16 @@ const fetchMoviesHandler = useCallback(async () => {
 useEffect(() => {
   fetchMoviesHandler();
 },[fetchMoviesHandler])
+
+async function addMovieHandler(movie) {
+  const response = await fetch('https://react-http-441e2-default-rtdb.firebaseio.com/movies.json', {
+    method: 'POST',
+    body: JSON.stringify(movie),
+    headers: {'Content-type': 'application/json'}
+  })
+  const data = await response.json();
+  console.log('data');
+}
 
 let content = <p>No movies found</p>
 
@@ -56,6 +71,9 @@ if (isLoading) {
   return (
     <React.Fragment>
       <section>
+        <AddMovie  onAddMovie={addMovieHandler}/>
+      </section>
+      <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
       <section>
@@ -66,3 +84,4 @@ if (isLoading) {
 }
 
 export default App;
+
